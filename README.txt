@@ -1,10 +1,8 @@
-The Internet Archive BookReader is used to view books from the Internet Archive
-online and can also be used to view other books.
+This is the italian bookreader fork!
 
-Developer documentation:
-http://openlibrary.org/dev/docs/bookreader
+The version is used to view books from Italian Olympic Committee Digital Library.
+available at http://dlib.coninet.it (italian language)
 
-Hosted source code:
-http://github.com/openlibrary/bookreader
+An example of the usage is at http://dlib.coninet.it/bookreader.php?&f=3933&p=1&c=1
 
 The source code license is AGPL v3, as described in the LICENSE file.
