@@ -147,7 +147,10 @@ $time1 = microtime(true) - $time0;
 
 
 //// Pass 1 - build up page* arrays with xml fragments corresponding to matches
+///  the page array is now two dimensional: each page element contain multiple elements!
+///  one for each word found in the page 
 $pagenumber=0;
+
 foreach (explode('</OBJECT>', $document) as $page)
 {
   $pagenumber++;
@@ -172,31 +175,43 @@ foreach (explode('</OBJECT>', $document) as $page)
       fatal("page height not set!");
     $pageHeight = $match[1];
     
+   
     $page_new='';
+    //    
+    // the words-page array is now $page_temp where $jj is the word index
+    //
+    $page_temp = array();
+    $jj=0;
+    $page_temp[$jj]='';
     foreach (explode('</WORD>',$page) as $token)
     {
+//
+//  The tricky part of the element construction...
+//
       if (matches_terms($token, $terms))
       {
-        list($junk, $keep) = explode('<WORD ',$token);
-        $token = " $tag_pre<WORD $keep</WORD>$tag_post "; 
+	  
+	  list($junk, $keep) = explode('<WORD ',$token);
+        $token = " $tag_pre<WORD $keep</WORD>$tag_post ";
+		$page_temp[$jj].=$token;
+		$jj++;
+		$page_temp[$jj]='';
       }
       else
       {
         $token = preg_replace('/<[^<]*>/','', $token);     //mark-up
         $token = preg_replace('/[\&\#\d+;]/', ' ', $token);//non-ascii chars
         $token = preg_replace('/\s+/', ' ', $token);       //white space
+		if ($jj>0) $page_temp[$jj-1].=$token;
+		$page_temp[$jj] .= $token;
       }
-
-      $page_new .= $token;
+	  
     }
-
-    
-    
-    $page_new =
-      preg_replace('|.*((\W\w*){'.$num_pre.'}'.$tag_pre.')|',"$1",$page_new);
-    $page_new =
-      preg_replace('/('.$tag_post.'(\w*\W){'.$num_post.'}).*/',"$1",$page_new);
-    
+    for ($i=0;$i<$jj; $i++) {
+    $page_temp[$i] =preg_replace('|.*((\W\w*){'.$num_pre.'}'.$tag_pre.')|',"$1",$page_temp[$i]);
+    $page_temp[$i] =preg_replace('/('.$tag_post.'(\w*\W){'.$num_post.'}).*/',"$1",$page_temp[$i]);
+	$pages[$pagenumber][$i] = $page_temp[$i];
+    }
     
     // added to keep track of the page we are on
     // Brad Neuberg, bkn3@columbia.edu
@@ -239,17 +254,22 @@ else if ($format == "XML")
   // which messes up processing, Brad Neuberg, bkn3@columbia.edu
   $xml .= '<?xml-stylesheet type="text/css" href="blank.css"?>'."\n";//fixxx
   $xml .= '<SEARCH>';
-
-  foreach ($pages as $index => $page)
-  {
+//
+// We loop for each page and for each word found in the page
+//
+  foreach ($pages as $index => $page1)
+  {	
+   foreach ($page1 as $key => $page)
+	{
     $xml .= "<PAGE file=\"{$pageFiles[$index]}\" width=\"{$pageWidths[$index]}\" height=\"{$pageHeights[$index]}\">\n";
     $xml .= "<CONTEXT>\n";
     $xml .= $page;
     $xml .= "</CONTEXT>\n";
     $xml .= "</PAGE>\n";
+    } 
   }
-  $xml .= "</SEARCH>\n";
-  
+  $xml .= "</SEARCH>\n";  
+
   if (false === $callback) {
       // The XML contains the page numbers from the DJVU XML.  We must remap them to flipbook indices
       // since the flipbook indices are monotonically increasing generated from the pages with
