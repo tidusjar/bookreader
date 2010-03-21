@@ -178,7 +178,7 @@ foreach (explode('</OBJECT>', $document) as $page)
    
     $page_new='';
     //    
-    // the words-page array is now $page_temp where $jj is the word index
+    // the words-page variable is now $page_temp array where $jj is the word index
     //
     $page_temp = array();
     $jj=0;
